@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning Lab: Market Signal Analysis & Risk Management</title>
+    <style>
+        /* Modern CSS Reset & Color Palette adhering to WCAG AAA/AA Contrast Ratios */
+        :root {
+            --bg-main: #0f172a;
+            --surface-card: #1e293b;
+            --surface-elevated: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --primary: #38bdf8;
+            --primary-focus: #7dd3fc;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            --accent-amber: #fbbf24;
+            --border-color: #475569;
+            --focus-ring: #0284c7;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 1.5rem;
+        }
+
+        header {
+            max-width: 1100px;
+            margin: 0 auto 2rem auto;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: #000;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.1s ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            main {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        /* Form Controls Sidebar */
+        .control-panel {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .hint {
+            font-size: 0.825rem;
+            color: var(--text-muted);
+        }
+
+        select, input[type="range"] {
+            width: 100%;
+            padding: 0.6rem;
+            background-color: var(--surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.95rem;
+        }
+
+        select:focus-visible, input:focus-visible, button:focus-visible {
+            outline: 3px solid var(--primary-focus);
+            outline-offset: 2px;
+        }
+
+        .range-value {
+            font-weight: bold;
+            color: var(--primary);
+            float: right;
+        }
+
+        button.btn-primary {
+            background-color: var(--primary);
+            color: #0f172a;
+            font-weight: 700;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--primary-focus);
+        }
+
+        /* Visualization & Analysis Area */
+        .display-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--surface-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background-color: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Status & Summary Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background-color: var(--surface-elevated);
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .metric-card h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-card .value {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        /* Feedback and Assessment Block */
+        .feedback-box {
+            border-left: 5px solid var(--accent-amber);
+            background-color: var(--surface-elevated);
+            padding: 1rem 1.25rem;
+            border-radius: 0 6px 6px 0;
+            aria-live: polite;
+        }
+
+        .feedback-box.pass {
+            border-left-color: var(--accent-green);
+        }
+
+        .feedback-box.fail {
+            border-left-color: var(--accent-red);
+        }
+
+        .feedback-box h2 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Screen reader utility class */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Data table for WCAG accessibility fallback */
+        table.data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        table.data-table th, table.data-table td {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        table.data-table th {
+            background-color: var(--surface-elevated);
+            color: var(--text-main);
+        }
+
+        /* Focus Ring styles */
+        :focus {
+            outline: 3px solid var(--primary-focus);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <header role="banner">
+        <h1>Market Signal & Portfolio Stress Simulator</h1>
+        <p class="subtitle">Based on <em>Before the Music Stops: Goat Academy Workbook</em> (October 2026)</p>
+    </header>
+
+    <main id="main-content">
+        <!-- Interactive Controls -->
+        <section class="control-panel" aria-labelledby="controls-heading">
+            <h2 id="controls-heading" class="sr-only">Simulation Control Parameters</h2>
+            
+            <div class="control-group">
+                <label for="scenario-select">Select Market Signal Scenario:</label>
+                <select id="scenario-select">
+                    <option value="signal1">Signal 1: Divergence (Price Up, Volume Down)</option>
+                    <option value="signal2_strong">Signal 2: Strong Breakout (Long Range + High Volume)</option>
+                    <option value="signal2_weak">Signal 2: Weak Breakout (Short Range + Low Volume)</option>
+                    <option value="rotation">Signal 3: Industry Sector Rotation</option>
+                </select>
+                <span class="hint">Controls chart market pattern behaviors.</span>
+            </div>
+
+            <div class="control-group">
+                <label for="tech-exposure">
+                    Tech Exposure Level ("Your Number"):
+                    <span id="tech-exposure-val" class="range-value">60%</span>
+                </label>
+                <input type="range" id="tech-exposure" min="0" max="100" value="60" step="5" aria-describedby="tech-hint">
+                <span id="tech-hint" class="hint">Percentage of total capital dependent on high-tech/concentrated assets.</span>
+            </div>
+
+            <div class="control-group">
+                <label for="stop-loss">
+                    Exit Order Level (Stop-Loss Below Recent Low):
+                    <span id="stop-loss-val" class="range-value">10%</span>
+                </label>
+                <input type="range" id="stop-loss" min="2" max="30" value="10" step="1" aria-describedby="stop-hint">
+                <span id="stop-hint" class="hint">Automatic broker exit instruction threshold below purchase price.</span>
+            </div>
+
+            <div class="control-group">
+                <label for="cash-runway">
+                    Company Cash Runway (Quarterly Burn):
+                    <span id="cash-runway-val" class="range-value">3 Mo.</span>
+                </label>
+                <input type="range" id="cash-runway" min="1" max="24" value="3" step="1" aria-describedby="cash-hint">
+                <span id="cash-hint" class="hint">Fundamental health check: Months of cash left before depletion.</span>
+            </div>
+
+            <button id="run-sim-btn" class="btn-primary" type="button">Execute Trade Simulation</button>
+        </section>
+
+        <!-- Visualization and Results -->
+        <section class="display-panel" aria-labelledby="analysis-heading">
+            <h2 id="analysis-heading" class="sr-only">Analysis & Chart Display</h2>
+
+            <!-- Graphic Visualization -->
+            <div class="card">
+                <h2 style="font-size: 1.1rem; margin-bottom: 0.75rem;">Interactive Asset Price & Volume Chart</h2>
+                <div class="canvas-container">
+                    <canvas id="marketChart" role="img" aria-label="Line chart showing market price line and volume bar visual simulation based on chosen scenario options."></canvas>
+                </div>
+            </div>
+
+            <!-- Calculated Portfolio Impact Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card" id="card-max-drawdown">
+                    <h3>Single Loss Impact</h3>
+                    <div class="value" id="metric-single-loss">-10.0%</div>
+                </div>
+                <div class="metric-card" id="card-portfolio-impact">
+                    <h3>Portfolio Stress Impact</h3>
+                    <div class="value" id="metric-portfolio-impact">-6.0%</div>
+                </div>
+                <div class="metric-card" id="card-cash-status">
+                    <h3>Fundamental Check</h3>
+                    <div class="value" id="metric-cash-status">High Risk</div>
+                </div>
+            </div>
+
+            <!-- Pedagogical Feedback Box -->
+            <div id="feedback-panel" class="feedback-box fail" role="region" aria-live="polite">
+                <h2 id="feedback-title">Diagnostic Evaluation: High Risk Detected</h2>
+                <p id="feedback-text">
+                    Loading initial analysis...
+                </p>
+            </div>
+
+            <!-- Accessibility Alternative: Data Table for Screen Readers -->
+            <details class="card">
+                <summary style="cursor: pointer; font-weight: 600;">Accessible Data Summary (Table View)</summary>
+                <table class="data-table" id="accessible-data-table">
+                    <caption>Numeric representation of simulated price chart and volume</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Time Interval</th>
+                            <th scope="col">Simulated Price ($)</th>
+                            <th scope="col">Trading Volume (Shares)</th>
+                            <th scope="col">Market Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </details>
+        </section>
+    </main>
+
+    <script>
+        // Application State
+        const state = {
+            scenario: 'signal1',
+            techExposure: 60,
+            stopLoss: 10,
+            cashRunway: 3
+        };
+
+        // DOM Elements
+        const scenarioSelect = document.getElementById('scenario-select');
+        const techSlider = document.getElementById('tech-exposure');
+        const techValDisplay = document.getElementById('tech-exposure-val');
+        const stopSlider = document.getElementById('stop-loss');
+        const stopValDisplay = document.getElementById('stop-loss-val');
+        const cashSlider = document.getElementById('cash-runway');
+        const cashValDisplay = document.getElementById('cash-runway-val');
+        const runBtn = document.getElementById('run-sim-btn');
+
+        const metricSingleLoss = document.getElementById('metric-single-loss');
+        const metricPortfolioImpact = document.getElementById('metric-portfolio-impact');
+        const metricCashStatus = document.getElementById('metric-cash-status');
+        const feedbackPanel = document.getElementById('feedback-panel');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackText = document.getElementById('feedback-text');
+        const tableBody = document.getElementById('table-body');
+
+        const canvas = document.getElementById('marketChart');
+        const ctx = canvas.getContext('2d');
+
+        // Accessibility/Resizing Setup
+        function setupCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        window.addEventListener('resize', () => {
+            setupCanvas();
+            render();
+        });
+
+        // Event Listeners
+        scenarioSelect.addEventListener('change', (e) => {
+            state.scenario = e.target.value;
+            render();
+        });
+
+        techSlider.addEventListener('input', (e) => {
+            state.techExposure = parseInt(e.target.value, 10);
+            techValDisplay.textContent = `${state.techExposure}%`;
+            renderMetricsOnly();
+        });
+
+        stopSlider.addEventListener('input', (e) => {
+            state.stopLoss = parseInt(e.target.value, 10);
+            stopValDisplay.textContent = `${state.stopLoss}%`;
+            renderMetricsOnly();
+        });
+
+        cashSlider.addEventListener('input', (e) => {
+            state.cashRunway = parseInt(e.target.value, 10);
+            cashValDisplay.textContent = `${state.cashRunway} Mo.`;
+            renderMetricsOnly();
+        });
+
+        runBtn.addEventListener('click', () => {
+            render();
+        });
+
+        // Generate Dataset based on Workbook Signals
+        function generateData() {
+            const points = 30;
+            let prices = [];
+            let volumes = [];
+            let status = [];
+
+            if (state.scenario === 'signal1') {
+                // Signal 1: Price rising, Volume falling (Divergence warning)
+                for (let i = 0; i < points; i++) {
+                    if (i < 20) {
+                        prices.push(50 + i * 2);
+                        volumes.push(100 - i * 3.5); // Shrinking volume
+                        status.push("Price Rising / Volume Falling (Warning)");
+                    } else {
+                        prices.push(90 - (i - 20) * 4); // Decline
+                        volumes.push(80 + (i - 20) * 5); // Heavy selling volume
+                        status.push("Sharp Reversal Decline");
+                    }
+                }
+            } else if (state.scenario === 'signal2_strong') {
+                // Signal 2 Strong: Long Sideways Range -> Breakout on 2x Volume
+                for (let i = 0; i < points; i++) {
+                    if (i < 18) {
+                        prices.push(40 + Math.sin(i) * 2); // Sideways heartbeat
+                        volumes.push(20 + Math.random() * 5);
+                        status.push("Heartbeat Consolidation");
+                    } else {
+                        prices.push(42 + (i - 18) * 3.5); // Strong breakout
+                        volumes.push(75 + Math.random() * 10); // Volume spike (>2x)
+                        status.push("Strong Breakout (Heavy Volume)");
+                    }
+                }
+            } else if (state.scenario === 'signal2_weak') {
+                // Signal 2 Weak: Sideways Range -> Breakout on Unchanged Volume
+                for (let i = 0; i < points; i++) {
+                    if (i < 18) {
+                        prices.push(40 + Math.sin(i) * 2);
+                        volumes.push(20 + Math.random() * 5);
+                        status.push("Short Range Consolidation");
+                    } else {
+                        let p = 42 + (i - 18) * 1.5;
+                        if (i > 24) p = 51 - (i - 24) * 2; // Failure/Retracement
+                        prices.push(p);
+                        volumes.push(22 + Math.random() * 5); // Low/Unchanged Volume
+                        status.push("Weak Breakout Failure");
+                    }
+                }
+            } else if (state.scenario === 'rotation') {
+                // Signal 3: Sector Rotation (Tech down, Defensive sector up)
+                for (let i = 0; i < points; i++) {
+                    prices.push(60 + Math.sin(i * 0.5) * 8 + (i > 15 ? (i - 15) * 1.5 : 0));
+                    volumes.push(40 + i * 1.5);
+                    status.push("Capital Inflow / Sector Rotation");
+                }
+            }
+
+            return { prices, volumes, status };
+        }
+
+        // Draw Interactive Canvas Chart
+        function drawChart(data) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const padding = 40;
+            const width = canvas.width - padding * 2;
+            const height = canvas.height - padding * 2;
+            const maxPrice = Math.max(...data.prices) * 1.1;
+            const minPrice = Math.min(...data.prices) * 0.9;
+            const maxVol = Math.max(...data.volumes) * 1.2;
+
+            // Draw Axes
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+
+            // Draw Volume Bars
+            const barWidth = width / data.prices.length * 0.6;
+            for (let i = 0; i < data.volumes.length; i++) {
+                const x = padding + (i * (width / data.volumes.length)) + barWidth / 2;
+                const volHeight = (data.volumes[i] / maxVol) * (height * 0.35);
+                const y = canvas.height - padding - volHeight;
+
+                ctx.fillStyle = (i > 0 && data.prices[i] >= data.prices[i-1]) ? '#38bdf8' : '#f87171';
+                ctx.fillRect(x, y, barWidth, volHeight);
+            }
+
+            // Draw Price Line
+            ctx.strokeStyle = '#4ade80';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let i = 0; i < data.prices.length; i++) {
+                const x = padding + (i * (width / data.prices.length)) + barWidth / 2;
+                const priceNorm = (data.prices[i] - minPrice) / (maxPrice - minPrice);
+                const y = canvas.height - padding - (priceNorm * (height * 0.85));
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        // Populate Accessible Table View
+        function updateTable(data) {
+            tableBody.innerHTML = '';
+            for (let i = 0; i < data.prices.length; i += 5) { // Sample every 5 points for brevity
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>Interval ${i + 1}</td>
+                    <td>$${data.prices[i].toFixed(2)}</td>
+                    <td>${Math.round(data.volumes[i] * 1000)}</td>
+                    <td>${data.status[i]}</td>
+                `;
+                tableBody.appendChild(tr);
+            }
+        }
+
+        // Logic & Feedback Evaluation
+        function renderMetricsOnly() {
+            // Calculated values
+            const singleLoss = state.stopLoss;
+            const portfolioImpact = (state.techExposure / 100) * state.stopLoss;
+            
+            metricSingleLoss.textContent = `-${singleLoss.toFixed(1)}%`;
+            metricPortfolioImpact.textContent = `-${portfolioImpact.toFixed(1)}%`;
+
+            // Cash Health Evaluation
+            let cashStatusText = "Pass (Safe)";
+            let cashColor = "var(--accent-green)";
+            if (state.cashRunway < 6) {
+                cashStatusText = "Fail (High Risk)";
+                cashColor = "var(--accent-red)";
+            } else if (state.cashRunway <= 12) {
+                cashStatusText = "Caution";
+                cashColor = "var(--accent-amber)";
+            }
+            metricCashStatus.textContent = cashStatusText;
+            metricCashStatus.style.color = cashColor;
+
+            // Decision Engine & Workbook Rules Application
+            let pass = true;
+            let messages = [];
+
+            // Rule 1: Tech Concentration ("Your Number")
+            if (state.techExposure > 30) {
+                pass = false;
+                messages.push(`<strong>High Concentration Risk:</strong> Your tech exposure ("Your Number") is ${state.techExposure}%. Workbook rules mandate keeping concentrated thematic exposure low so a 20% drawdown costs ≤ 1% of total wealth.`);
+            }
+
+            // Rule 2: Cash Runway Rule (Chapter 11)
+            if (state.cashRunway < 6) {
+                pass = false;
+                messages.push(`<strong>Fundamental Cash Failure:</strong> The company only has ${state.cashRunway} months of cash left. Workbook Rule: Fundamentals are used to reject trades. Never buy companies facing near-term cash exhaustion (e.g., CoreWeave case study).`);
+            }
+
+            // Rule 3: Scenario Signal Alignment
+            if (state.scenario === 'signal1') {
+                messages.push(`<strong>Signal 1 Detected:</strong> Price is rising while volume shrinks. Big buyers are no longer participating. Ensure your exit order is active.`);
+            } else if (state.scenario === 'signal2_weak') {
+                pass = false;
+                messages.push(`<strong>Weak Breakout Warning:</strong> Breakout occurred without heavy volume increase (under double normal). Workbook Rule: Buy the break only when backed by strong volume and length.`);
+            } else if (state.scenario === 'signal2_strong') {
+                messages.push(`<strong>Valid Signal 2 Breakout:</strong> Heartbeat pattern followed by close above range on heavy volume (>2x). Meets technical criteria.`);
+            } else if (state.scenario === 'rotation') {
+                messages.push(`<strong>Signal 3 Active:</strong> Capital rotating out of falling sectors into non-cyclical/essential industries.`);
+            }
+
+            // Render Diagnostic Box
+            if (pass) {
+                feedbackPanel.className = "feedback-box pass";
+                feedbackTitle.textContent = "Disciplined Execution: Trade Parameters Acceptable";
+            } else {
+                feedbackPanel.className = "feedback-box fail";
+                feedbackTitle.textContent = "Rule Violation: Risk Threshold Exceeded";
+            }
+
+            feedbackText.innerHTML = messages.join('<br><br>');
+        }
+
+        function render() {
+            setupCanvas();
+            const data = generateData();
+            drawChart(data);
+            updateTable(data);
+            renderMetricsOnly();
+        }
+
+        // Initialize on Load
+        render();
+    </script>
+</body>
+</html>
